@@ -6,226 +6,227 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Processos - NGP</title>
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Controle de Processos - NGP</title>
+    <script type="module">
+        // seu código Firebase aqui
+    </script>
 
-
-        <script type="module">
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-            import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, query, where, writeBatch } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
-
-            const firebaseConfig = {
-                apiKey: "AIzaSyAVKOfdal5c-X4kDsUD2mTtzECUoVI060E",
-                authDomain: "inventario-politec.firebaseapp.com",
-                projectId: "inventario-politec",
-                storageBucket: "inventario-politec.firebasestorage.app",
-                messagingSenderId: "897699317031",
-                appId: "1:897699317031:web:a37faf3f8707a1e0d5d502",
-                measurementId: "G-2T404BM13W"
-            };
-
-            // Inicializa o Firebase
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
-
-            // Função para carregar dados
-            async function carregarDadosFirestore() {
-                try {
-                    const processosRef = collection(db, 'processos');
-                    const snapshot = await getDocs(processosRef);
-                    const dados = [];
-
-                    snapshot.forEach((doc) => {
-                        dados.push(doc.data());
-                    });
-
-                    if (dados.length > 0) {
-                        preencherTabela(dados);
-                        verificarPrazos();
-                    }
-                } catch (erro) {
-                    console.error("Erro ao carregar dados:", erro);
-                    alert('Erro ao carregar dados: ' + erro.message);
-                }
-            }
-
-            // Função para salvar dados
-            async function salvarDadosFirestore() {
-                try {
-                    const dados = coletarDados();
-
-                    // Primeiro, exclui todos os documentos existentes
-                    const processosRef = collection(db, 'processos');
-                    const snapshot = await getDocs(processosRef);
-                    const batch = writeBatch(db);
-
-                    // Marca todos os documentos existentes para exclusão
-                    snapshot.docs.forEach((doc) => {
-                        batch.delete(doc.ref);
-                    });
-
-                    // Adiciona os novos documentos
-                    for (const dado of dados) {
-                        if (dado.numero.trim() !== '') {
-                            // Gera um ID único para cada documento
-                            const docId = dado.numero.replace(/\D/g, ''); // Remove tudo que não é número
-                            const docRef = doc(processosRef, docId); // Usa a referência já criada
-                            batch.set(docRef, dado);
-                        }
-                    }
-
-                    await batch.commit();
-                    alert('✅ Dados salvos no Firestore com sucesso!');
-                    await carregarDadosFirestore();
-                } catch (erro) {
-                    console.error("Erro ao salvar no Firestore:", erro);
-                    alert('❌ Erro ao salvar no Firestore: ' + erro.message);
-                }
-            }
-
-            // Disponibilizar funções globalmente
-            window.carregarDadosFirestore = carregarDadosFirestore;
-            window.salvarArquivo = salvarDadosFirestore;
-
-            // Carregar dados quando a página carregar
-            document.addEventListener('DOMContentLoaded', carregarDadosFirestore);
-            // Dentro do <script type="module">
-            async function deletarProcesso(numero) {
-                try {
-                    const processosRef = collection(db, 'processos');
-                    // Remove tudo que não é número para criar o ID
-                    const docId = numero.replace(/\D/g, '');
-                    const docRef = doc(processosRef, docId);
-                    await deleteDoc(docRef);
-                    return true;
-                } catch (erro) {
-                    console.error("Erro ao deletar processo:", erro);
-                    throw erro;
-                }
-            }
-
-            // Tornar a função global
-            window.deletarProcesso = deletarProcesso;
-        </script>
-
-        <!-- Resto do seu código CSS aqui -->
-        <style>
-            /* Seu CSS atual */
-        </style>
-    </head>
-
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Processos - NGP</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            overflow-x: auto;
-        }
-
-        header h1 {
-            color: #333;
-            font-size: 24px;
-            margin: 0 0 20px;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
-        input,
-        select,
-        textarea,
-        button {
-            padding: 8px;
-            font-size: 14px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            box-sizing: border-box;
-        }
-
-        textarea {
-            min-height: 60px;
-            width: 100%;
-            resize: vertical;
-        }
-
-        button {
-            background: #4CAF50;
-            color: white;
-            cursor: pointer;
-            border: none;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-
-        th {
-            background: #4CAF50;
-            color: white;
-        }
-
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-
-        td input[type="text"],
-        td input[type="date"],
-        td input[type="url"] {
-            width: 100%;
-        }
-
-        .prazo-proximo {
-            background-color: #fff3e0 !important;
-        }
-
-        .prazo-vencido {
-            background-color: #ffebee !important;
-        }
-
-        a {
-            color: #4CAF50;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
+        // seu CSS aqui
     </style>
+</head>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+    import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, query, where, writeBatch } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+
+    // Configuração do Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyAVKOfdal5c-X4kDsUD2mTtzECUoVI060E",
+        authDomain: "inventario-politec.firebaseapp.com",
+        projectId: "inventario-politec",
+        storageBucket: "inventario-politec.firebasestorage.app",
+        messagingSenderId: "897699317031",
+        appId: "1:897699317031:web:a37faf3f8707a1e0d5d502",
+        measurementId: "G-2T404BM13W"
+    };
+
+    // Inicializa o Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Função para carregar dados
+    async function carregarDadosFirestore() {
+        try {
+            const processosRef = collection(db, 'processos');
+            const snapshot = await getDocs(processosRef);
+            const dados = [];
+
+            snapshot.forEach((doc) => {
+                dados.push(doc.data());
+            });
+
+            preencherTabela(dados);
+            verificarPrazos();
+        } catch (erro) {
+            console.error("Erro ao carregar dados:", erro);
+            alert('Erro ao carregar dados: ' + erro.message);
+        }
+    }
+
+    // Função para salvar dados
+    async function salvarDadosFirestore() {
+        try {
+            const dados = coletarDados();
+
+            const processosRef = collection(db, 'processos');
+            const snapshot = await getDocs(processosRef);
+            const batch = writeBatch(db);
+
+            snapshot.docs.forEach((doc) => {
+                batch.delete(doc.ref);
+            });
+
+            for (const dado of dados) {
+                if (dado.numero.trim() !== '') {
+                    const docId = dado.numero.replace(/\D/g, '');
+                    const docRef = doc(processosRef, docId);
+                    batch.set(docRef, dado);
+                }
+            }
+
+            await batch.commit();
+            alert('✅ Dados salvos no Firestore com sucesso!');
+            location.reload();
+        } catch (erro) {
+            console.error("Erro ao salvar no Firestore:", erro);
+            alert('❌ Erro ao salvar no Firestore: ' + erro.message);
+        }
+    }
+
+    // Função para deletar processo
+    async function deletarProcesso(numero) {
+        try {
+            const processosRef = collection(db, 'processos');
+            const docId = numero.replace(/\D/g, '');
+            const docRef = doc(processosRef, docId);
+            await deleteDoc(docRef);
+            return true;
+        } catch (erro) {
+            console.error("Erro ao deletar processo:", erro);
+            throw erro;
+        }
+    }
+
+    // Disponibilizar funções globalmente
+    window.salvarArquivo = salvarDadosFirestore;
+    window.carregarDadosFirestore = carregarDadosFirestore;
+    window.deletarProcesso = deletarProcesso;
+
+    // Carregar dados quando a página carregar
+    document.addEventListener('DOMContentLoaded', carregarDadosFirestore);
+    // Dentro do <script type="module">
+
+
+    // Tornar a função global
+    window.deletarProcesso = deletarProcesso;
+</script>
+
+<!-- Resto do seu código CSS aqui -->
+<style>
+    /* Seu CSS atual */
+</style>
+</head>
+
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Processos - NGP</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+    }
+
+    .container {
+        max-width: 100%;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        overflow-x: auto;
+    }
+
+    header h1 {
+        color: #333;
+        font-size: 24px;
+        margin: 0 0 20px;
+        border-bottom: 2px solid #4CAF50;
+        padding-bottom: 10px;
+    }
+
+    .controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+        padding: 8px;
+        font-size: 14px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        box-sizing: border-box;
+    }
+
+    textarea {
+        min-height: 60px;
+        width: 100%;
+        resize: vertical;
+    }
+
+    button {
+        background: #4CAF50;
+        color: white;
+        cursor: pointer;
+        border: none;
+    }
+
+    button:hover {
+        opacity: 0.9;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    th,
+    td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    th {
+        background: #4CAF50;
+        color: white;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    td input[type="text"],
+    td input[type="date"],
+    td input[type="url"] {
+        width: 100%;
+    }
+
+    .prazo-proximo {
+        background-color: #fff3e0 !important;
+    }
+
+    .prazo-vencido {
+        background-color: #ffebee !important;
+    }
+
+    a {
+        color: #4CAF50;
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+</style>
 </head>
 
 <body>
@@ -257,6 +258,7 @@
                         <th>Andamento</th>
                         <th>Link</th>
                         <th>Prazo</th>
+                        <th>Status</th> <!-- Nova coluna -->
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -323,27 +325,6 @@
             });
         }
 
-        window.salvarArquivo = async function () {
-            try {
-                const dados = coletarDados();
-                const batch = writeBatch(db);
-
-                for (const dado of dados) {
-                    const docRef = doc(collection(db, 'processos'), dado.numero || `novo_${Date.now()}`);
-                    batch.set(docRef, dado);
-                }
-
-                await batch.commit();
-                alert('✅ Dados salvos no Firestore com sucesso!');
-
-                // Recarrega os dados após salvar
-                await carregarDados();
-            } catch (erro) {
-                console.error("Erro ao salvar no Firestore:", erro);
-                alert('❌ Erro ao salvar no Firestore: ' + erro.message);
-            }
-        }
-
 
         function exportarExcel() {
             try {
@@ -385,8 +366,9 @@
                 const andamento = tr.querySelector('td:nth-child(4) textarea')?.value || "";
                 const link = tr.querySelector('td:nth-child(5) input')?.value || "";
                 const prazo = tr.querySelector('td:nth-child(6) input')?.value || "";
+                const status = tr.querySelector('td:nth-child(7) select')?.value || ""; // Novo campo
 
-                dados.push({ numero, data, assunto, andamento, link, prazo });
+                dados.push({ numero, data, assunto, andamento, link, prazo, status });
             });
 
             return dados;
@@ -400,15 +382,26 @@
             }
 
             dados.forEach(d => {
+                // Na função preencherTabela, atualize a const linha para incluir o status
                 const linha = `<tr>
-            <td><input type="text" value="${d.numero || ''}" placeholder="0000.000000/0000-00" pattern="[0-9]{4}.[0-9]{6}/[0-9]{4}-[0-9]{2}" required></td>
-            <td><input type="date" value="${d.data || ''}" required onchange="verificarPrazos()"></td>
-            <td><input type="text" value="${d.assunto || ''}" placeholder="Assunto" required></td>
-            <td><textarea placeholder="Andamento" required>${d.andamento || ''}</textarea></td>
-            <td><input type="url" value="${d.link || ''}" placeholder="Link" onchange="atualizarLink(this)" required></td>
-            <td><input type="date" value="${d.prazo || ''}" required onchange="verificarPrazos()"></td>
-            <td><button onclick="removerLinha(this)" class="btn-excluir" style="background-color: #dc3545;">🗑️</button>
-            </td>`;
+    <td><input type="text" value="${d.numero || ''}" placeholder="0000.000000/0000-00" pattern="[0-9]{4}.[0-9]{6}/[0-9]{4}-[0-9]{2}" required></td>
+    <td><input type="date" value="${d.data || ''}" required onchange="verificarPrazos()"></td>
+    <td><input type="text" value="${d.assunto || ''}" placeholder="Assunto" required></td>
+    <td><textarea placeholder="Andamento" required>${d.andamento || ''}</textarea></td>
+    <td><input type="url" value="${d.link || ''}" placeholder="Link" onchange="atualizarLink(this)" required></td>
+    <td><input type="date" value="${d.prazo || ''}" required onchange="verificarPrazos()"></td>
+    <td>
+        <select class="status-processo" required>
+            <option value="">Selecione</option>
+            <option value="elaboracao" ${d.status === 'elaboracao' ? 'selected' : ''}>Em Elaboração</option>
+            <option value="cotacao" ${d.status === 'cotacao' ? 'selected' : ''}>Aguardando Cotação</option>
+            <option value="analise" ${d.status === 'analise' ? 'selected' : ''}>Em Análise Técnica</option>
+            <option value="licitacao" ${d.status === 'licitacao' ? 'selected' : ''}>Em Licitação</option>
+            <option value="concluido" ${d.status === 'concluido' ? 'selected' : ''}>Concluído</option>
+        </select>
+    </td>
+    <td><button onclick="removerLinha(this)" class="btn-excluir" style="background-color: #dc3545;">🗑️</button></td>
+`;;
                 tbody.insertAdjacentHTML('beforeend', linha);
 
                 if (d.link) {
@@ -454,6 +447,16 @@
         <td><textarea placeholder="Andamento" required></textarea></td>
         <td><input type="url" placeholder="Link" onchange="atualizarLink(this)" required></td>
         <td><input type="date" required onchange="verificarPrazos()"></td>
+        <td>
+            <select class="status-processo" required>
+                <option value="">Selecione</option>
+                <option value="elaboracao">Em Elaboração</option>
+                <option value="cotacao">Aguardando Cotação</option>
+                <option value="analise">Em Análise Técnica</option>
+                <option value="licitacao">Em Licitação</option>
+                <option value="concluido">Concluído</option>
+            </select>
+        </td>
         <td><button onclick="removerLinha(this)">❌</button></td>
     </tr>`;
             tbody.insertAdjacentHTML('beforeend', linha);
@@ -516,5 +519,3 @@
 </body>
 
 </html>
-
-<!-- CODIGO PARA CONTROLE DE PROCESSOS -->
